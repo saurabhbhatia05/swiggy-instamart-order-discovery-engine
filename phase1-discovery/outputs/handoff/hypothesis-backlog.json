@@ -1,0 +1,34 @@
+{
+  "hypotheses": [
+    {
+      "statement": "Users exhibit massive trust barriers around fresh produce and electronics, inhibiting exploration behavior.",
+      "research_question": "Q2",
+      "confidence": "high",
+      "evidence_count": 236,
+      "sample_quotes": [
+        "[QC discussion / Trust in new categories] Sharing my Swiggy Instamart experience: it takes almost 40...",
+        "[QC discussion / Trust in new categories] Sharing my Swiggy Instamart experience: please follow amaz..."
+      ]
+    },
+    {
+      "statement": "Grocery essentials trigger a 'reorder autopilot' habit loop, entirely bypassing the app's discovery features.",
+      "research_question": "Q1",
+      "confidence": "high",
+      "evidence_count": 212,
+      "sample_quotes": [
+        "[QC discussion / Quick commerce habit loop] Sharing my Swiggy Instamart experience: very nice food 🥝...",
+        "[QC discussion / Quick commerce habit loop] Sharing my Swiggy Instamart experience: My many accounts..."
+      ]
+    },
+    {
+      "statement": "Specific demographics (like parents) rely exclusively on direct product links for non-grocery item discovery.",
+      "research_question": "Q7",
+      "confidence": "medium",
+      "evidence_count": 85,
+      "sample_quotes": [
+        "[Product review: Order accuracy] Ordered via Swiggy Instamart. Repeated worst experience from Swiggy...",
+        "[QC discussion / Student user quick commerce habits] Sharing my Swiggy Instamart experience: worst a..."
+      ]
+    }
+  ]
+}

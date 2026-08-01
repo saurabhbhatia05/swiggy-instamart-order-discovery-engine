@@ -1,0 +1,41 @@
+# Swiggy Instamart Order Discovery Engine
+
+AI-powered review analysis system for Swiggy Instamart — Phase 1 Discovery Engine.
+
+Analyzes 3,000+ multi-source public reviews to understand category repetition, exploration barriers, and discovery behavior.
+
+## Structure
+
+```
+doc/                    Architecture & presentation docs
+phase1-discovery/       Ingestion, ETL, analysis, dashboard
+  dashboard/            Streamlit entry (deployment)
+  frontend/             Next.js dashboard (embedded in Streamlit)
+  data/                 Raw & processed corpus
+  outputs/handoff/      Hypotheses & Phase 1 summary
+```
+
+## Quick start
+
+```bash
+# Phase 1 pipeline
+cd phase1-discovery
+cp .env.example .env   # add GROQ_API_KEY if using AI scraper
+python derive_sources.py
+python run_pipeline.py
+python run_analysis.py
+
+# Dashboard (Windows)
+start_dashboard.bat
+# Streamlit: http://localhost:8501  |  Next.js: http://localhost:3000
+```
+
+## Documentation
+
+- [Phase-wise architecture](doc/phaseWiseArchitecture.md)
+- [2-slide presentation summary](doc/phase1-discovery-engine-summary.md)
+- [Phase 1 detailed architecture](doc/architecture/phase1-ai-discovery-engine.md)
+
+## Deployment
+
+Deploy **Streamlit** (`phase1-discovery/dashboard/app.py`) with `NEXTJS_DASHBOARD_URL` pointing to a hosted **Next.js** app (`phase1-discovery/frontend`).
