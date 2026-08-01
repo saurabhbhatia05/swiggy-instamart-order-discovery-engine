@@ -39,7 +39,6 @@ npm run dev
 
 - [Frontend README & Vercel deploy](phase1-discovery/frontend/README.md)
 - [Phase-wise architecture](doc/phaseWiseArchitecture.md)
-- [2-slide presentation summary](doc/phase1-discovery-engine-summary.md)
 - [Phase 1 detailed architecture](doc/architecture/phase1-ai-discovery-engine.md)
 
 ## Deployment
