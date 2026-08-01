@@ -4,13 +4,16 @@ AI-powered review analysis system for Swiggy Instamart — Phase 1 Discovery Eng
 
 Analyzes 3,000+ multi-source public reviews to understand category repetition, exploration barriers, and discovery behavior.
 
+## Live demo
+
+**https://swiggy-instamart-order-discovery-en.vercel.app/**
+
 ## Structure
 
 ```
 doc/                    Architecture & presentation docs
-phase1-discovery/       Ingestion, ETL, analysis, dashboard
-  dashboard/            Streamlit entry (deployment)
-  frontend/             Next.js dashboard (embedded in Streamlit)
+phase1-discovery/       Ingestion, ETL, analysis, data
+  frontend/             Next.js dashboard (Vercel deployment)
   data/                 Raw & processed corpus
   outputs/handoff/      Hypotheses & Phase 1 summary
 ```
@@ -25,17 +28,22 @@ python derive_sources.py
 python run_pipeline.py
 python run_analysis.py
 
-# Dashboard (Windows)
-start_dashboard.bat
-# Streamlit: http://localhost:8501  |  Next.js: http://localhost:3000
+# Dashboard — local
+cd frontend
+npm install
+npm run dev
+# Open http://localhost:3000
 ```
 
 ## Documentation
 
+- [Frontend README & Vercel deploy](phase1-discovery/frontend/README.md)
 - [Phase-wise architecture](doc/phaseWiseArchitecture.md)
 - [2-slide presentation summary](doc/phase1-discovery-engine-summary.md)
 - [Phase 1 detailed architecture](doc/architecture/phase1-ai-discovery-engine.md)
 
 ## Deployment
 
-Deploy **Streamlit** (`phase1-discovery/dashboard/app.py`) with `NEXTJS_DASHBOARD_URL` pointing to a hosted **Next.js** app (`phase1-discovery/frontend`).
+**Live app:** https://swiggy-instamart-order-discovery-en.vercel.app/
+
+Import repo on Vercel with root directory `phase1-discovery/frontend`. See [frontend README](phase1-discovery/frontend/README.md).

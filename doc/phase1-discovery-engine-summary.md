@@ -2,7 +2,8 @@
 ## 2-Slide Presentation Summary
 
 **Project:** Swiggy Instamart — New Category Discovery  
-**Deployment:** Streamlit (`dashboard/app.py`) + embedded Next.js dashboard  
+**Live demo:** https://swiggy-instamart-order-discovery-en.vercel.app/  
+**Deployment:** Next.js on Vercel — https://swiggy-instamart-order-discovery-en.vercel.app/  
 **Corpus:** 3,194 reviews · 7 sources · All Q1–Q8 answered with evidence
 
 ---
@@ -20,29 +21,30 @@ An **AI discovery engine** that ingests public feedback at scale, answers **8 re
 | **Ingest** | Play Store, App Store, Reddit, Forums, Social, Product Reviews, QC Discussions → `fetch_datasets.py` + `derive_sources.py` |
 | **Process** | Clean, dedupe, PII redact, entities, embeddings → `run_pipeline.py` |
 | **Analyze** | Theme scoring, Q1–Q8 synthesis, hypothesis export → `run_analysis.py` |
-| **Explore** | Streamlit dashboard: source + question filters, Live Workflow, RAG chat |
+| **Explore** | Vercel dashboard: source + question filters, Live Workflow, RAG chat |
 
 **Corpus (3,194 docs):** Reddit 712 · Product Reviews 627 · QC 563 · App Store 418 · Forums 341 · Social 294 · Play Store 239
 
 ### Architecture & UI
 
 ```
-7 Sources → Ingest → ETL → data/processed → AI Analysis → Dashboard
+7 Sources → Ingest → ETL → data/processed → AI Analysis → Dashboard (Vercel)
                                               ↓
                               hypothesis-backlog.json (Phase 2 handoff)
 
-Streamlit (:8501) ──iframe──► Next.js (:3000)
+https://swiggy-instamart-order-discovery-en.vercel.app/
   Left 35%: corpus totals, source list, data-source dropdown, Q1–Q8 dropdown
   Right 65%: Live Workflow (AI answer + themes + quotes) | Research Chat (RAG)
 ```
 
-### Deployment (Streamlit)
+### Deployment (Vercel)
 | Item | Detail |
 |------|--------|
-| **Host** | Streamlit Cloud — entry `phase1-discovery/dashboard/app.py` |
-| **UI** | Next.js on Vercel/Node — set `NEXTJS_DASHBOARD_URL` in Streamlit secrets |
-| **Local** | `start_dashboard.bat` → Next.js :3000 + Streamlit :8501 |
-| **Data** | `data/processed/` + `outputs/handoff/` (no DB required for MVP) |
+| **Live URL** | https://swiggy-instamart-order-discovery-en.vercel.app/ |
+| **Host** | Vercel — root `phase1-discovery/frontend` |
+| **Local** | `npm run dev` → http://localhost:3000 |
+| **Optional** | — |
+| **Data** | `data/processed/` + `outputs/handoff/` (no DB required) |
 | **Stack** | Python ETL · Next.js API · Groq (optional ingestion) |
 
 ---
@@ -77,7 +79,7 @@ Streamlit (:8501) ──iframe──► Next.js (:3000)
 |--------------|------|
 | 3,194-doc corpus, 7 sources | **Phase 2:** Validate hypotheses via interviews |
 | All Q1–Q8 with evidence | **Phase 3:** Problem canvas + PRD lite |
-| Streamlit + Next.js dashboard live | **Phase 4:** Smart Category Bridge MVP + A/B test |
+| Vercel dashboard live | **Phase 4:** Smart Category Bridge MVP + A/B test |
 | 3 hypotheses exported | **Focus segment:** Habitual grocery repeaters |
 
 **Phase 1 proves we can gather, analyze, and present user voice at scale — before building any product feature.**

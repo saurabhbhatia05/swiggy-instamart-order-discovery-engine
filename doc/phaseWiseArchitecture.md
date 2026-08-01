@@ -152,20 +152,22 @@ flowchart LR
 | AI Analysis | Groq LLM + LangGraph | Clustering, RAG, hypothesis generation (API key in .env) |
 | Validation | Human review UI | Quote traceability, inter-rater agreement |
 
-## Deployment (Streamlit)
+## Deployment
 
-Phase 1 deploys as a **Streamlit application** (`phase1-discovery/dashboard/app.py`) that embeds the **Next.js dashboard** via iframe.
+**Live demo:** https://swiggy-instamart-order-discovery-en.vercel.app/
+
+Phase 1 deploys as a **Next.js app on Vercel**.
 
 | Layer | Entry point | Notes |
 |-------|-------------|-------|
-| Streamlit shell | `dashboard/app.py` | Primary deployment target for stakeholders |
-| Next.js UI | `frontend/` | 35% left panel + 65% right panel; Live Workflow + RAG |
+| **Production UI** | `frontend/` on Vercel | https://swiggy-instamart-order-discovery-en.vercel.app/ |
 | Data | `data/processed/`, `outputs/handoff/` | JSON read at API runtime |
 
-**Local:** `start_dashboard.bat` → Streamlit `:8501` embeds Next.js `:3000`  
-**Production:** Streamlit Cloud + Vercel; set `NEXTJS_DASHBOARD_URL` in Streamlit secrets  
+**Local:** `cd frontend && npm run dev` → http://localhost:3000  
+**Production:** Vercel — import repo, root directory `phase1-discovery/frontend`  
 
 Detailed deployment spec: [`architecture/phase1-ai-discovery-engine.md` §16](architecture/phase1-ai-discovery-engine.md)  
+Frontend deploy guide: [`phase1-discovery/frontend/README.md`](../phase1-discovery/frontend/README.md)  
 Presentation summary: [`phase1-discovery-engine-summary.md`](phase1-discovery-engine-summary.md)
 
 ## Research Questions → Modules

@@ -11,14 +11,6 @@ export interface ProcessedDoc {
   dedupe_hash?: string;
 }
 
-export interface Hypothesis {
-  statement: string;
-  research_question: string;
-  confidence: string;
-  evidence_count: number;
-  sample_quotes?: string[];
-}
-
 export interface CorpusStats {
   totalDocuments: number;
   sourceCount: number;
@@ -50,13 +42,6 @@ export function loadProcessedDocuments(): ProcessedDoc[] {
     if (batch) docs.push(...batch);
   }
   return docs;
-}
-
-export function loadHypotheses(): Hypothesis[] {
-  const data = readJsonFile<{ hypotheses: Hypothesis[] }>(
-    path.join(HANDOFF_DIR, "hypothesis-backlog.json")
-  );
-  return data?.hypotheses ?? [];
 }
 
 export function loadSummary(): string | null {

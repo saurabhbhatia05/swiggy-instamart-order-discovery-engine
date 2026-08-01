@@ -539,9 +539,11 @@ phase1-discovery/outputs/handoff/
 
 ---
 
-## 16. Deployment Architecture (Streamlit)
+## 16. Deployment Architecture
 
-Phase 1 ships as a **Streamlit-hosted dashboard** that embeds a **Next.js frontend** via iframe. Streamlit is the primary deployment surface for stakeholders; Next.js provides the interactive UI, API layer, and research-question engine.
+**Live demo:** https://swiggy-instamart-order-discovery-en.vercel.app/
+
+Phase 1 deploys as a **Next.js app on Vercel**. The dashboard (35/65 layout, Q1–Q8, RAG) is the production surface.
 
 ### 16.1 Deployment Topology
 
@@ -551,105 +553,40 @@ flowchart TB
         USER[PM / Stakeholder]
     end
 
-    subgraph StreamlitDeploy["Streamlit Deployment"]
-        ENTRY[dashboard/app.py]
-        SIDEBAR[Streamlit Sidebar — run instructions]
-        IFRAME[components.iframe]
-        FALLBACK[Native Streamlit fallback]
-        ENTRY --> IFRAME
-        ENTRY --> FALLBACK
-    end
-
-    subgraph NextJSDeploy["Next.js Deployment — Vercel / Node"]
-        APP[Next.js App]
+    subgraph VercelDeploy["Vercel — Next.js"]
+        APP[frontend/ Next.js App]
         ROUTES[API Routes]
         LIB[researchQuestions.ts + data.ts]
         FILES[(data/processed/*.json<br/>outputs/handoff/*.json)]
         APP --> ROUTES --> LIB --> FILES
     end
 
-    USER --> ENTRY
-    IFRAME -->|NEXTJS_DASHBOARD_URL| APP
+    USER --> APP
 ```
 
 ### 16.2 Component Responsibilities
 
-| Component | Path | Role in deployment |
-|-----------|------|-------------------|
-| **Streamlit shell** | `phase1-discovery/dashboard/app.py` | Page config, sidebar, iframe embed, fallback UI |
-| **Next.js frontend** | `phase1-discovery/frontend/` | 35/65 layout, Q1–Q8 workflow, RAG chat |
-| **API layer** | `frontend/app/api/*` | Serve stats, research questions, RAG, insights |
-| **Processed data** | `data/processed/` | Runtime corpus for API routes |
-| **Handoff outputs** | `outputs/handoff/` | Hypotheses, Phase 1 summary |
-| **Local launcher** | `start_dashboard.bat` | Starts Next.js (:3000) + Streamlit (:8501) |
+| Component | Path | Role |
+|-----------|------|------|
+| **Next.js frontend** | `phase1-discovery/frontend/` | Dashboard UI, Live Workflow, RAG |
+| **API layer** | `frontend/app/api/*` | stats, research-questions, rag |
+| **Processed data** | `data/processed/` | Runtime corpus |
+| **Handoff** | `outputs/handoff/` | Hypotheses, Phase 1 summary |
 
-### 16.3 Streamlit Entry Point
-
-```python
-# dashboard/app.py — key behavior
-NEXTJS_URL = os.getenv("NEXTJS_DASHBOARD_URL", "http://localhost:3000")
-USE_IFRAME = os.getenv("STREAMLIT_USE_NEXTJS", "true").lower() in ("1", "true", "yes")
-
-# Embeds full Next.js dashboard
-components.iframe(NEXTJS_URL, height=920, scrolling=True)
-```
-
-When `STREAMLIT_USE_NEXTJS=false`, Streamlit renders a native fallback (corpus metrics + hypothesis list) without requiring Next.js.
-
-### 16.4 Environment Configuration
-
-| Variable | Required | Default | Description |
-|----------|----------|---------|-------------|
-| `NEXTJS_DASHBOARD_URL` | Yes (production) | `http://localhost:3000` | Public URL of deployed Next.js app |
-| `STREAMLIT_USE_NEXTJS` | No | `true` | Enable iframe embed vs native fallback |
-| `GROQ_API_KEY` | No | — | Ingestion-only; not needed for dashboard runtime |
-
-**Streamlit Cloud secrets example:**
-```toml
-NEXTJS_DASHBOARD_URL = "https://swiggy-phase1.vercel.app"
-STREAMLIT_USE_NEXTJS = "true"
-```
-
-### 16.5 Deployment Options
-
-#### Option A — Streamlit Cloud + Vercel (recommended)
+### 16.3 Vercel deploy
 
 | Step | Action |
 |------|--------|
-| 1 | Build Next.js: `cd frontend && npm run build` |
-| 2 | Deploy Next.js to Vercel (or any Node host) |
-| 3 | Bundle or mount `data/processed/` and `outputs/handoff/` for API routes |
-| 4 | Deploy Streamlit with entry point `dashboard/app.py` |
-| 5 | Set `NEXTJS_DASHBOARD_URL` in Streamlit secrets to Vercel URL |
+| 1 | Import repo on [vercel.com/new](https://vercel.com/new) |
+| 2 | Root directory: `phase1-discovery/frontend` |
+| 3 | Deploy — no env vars required for read-only JSON MVP |
+| 4 | Live: https://swiggy-instamart-order-discovery-en.vercel.app/ |
 
-#### Option B — Docker Compose (single VM)
+**Local:** `cd frontend && npm run dev` → http://localhost:3000
 
-```yaml
-# Conceptual — two services, shared data volume
-services:
-  nextjs:
-    build: ./frontend
-    ports: ["3000:3000"]
-    volumes: ["./data:/app/data", "./outputs:/app/outputs"]
-  streamlit:
-    build: ./dashboard
-    ports: ["8501:8501"]
-    environment:
-      NEXTJS_DASHBOARD_URL: http://nextjs:3000
-    depends_on: [nextjs]
-```
+See [`phase1-discovery/frontend/README.md`](../../phase1-discovery/frontend/README.md).
 
-#### Option C — Local development
-
-```bat
-# Windows — start_dashboard.bat
-start "Next.js" cmd /k "cd frontend && npm run dev"
-streamlit run dashboard/app.py
-```
-
-Access: **http://localhost:8501** (Streamlit embeds **http://localhost:3000**).
-
-### 16.6 Pre-Deployment Checklist
+### 16.4 Pre-deployment checklist
 
 | Check | Verification |
 |-------|--------------|
@@ -657,23 +594,12 @@ Access: **http://localhost:8501** (Streamlit embeds **http://localhost:3000**).
 | Handoff present | `outputs/handoff/hypothesis-backlog.json` |
 | Next.js build | `npm run build` exits 0 |
 | API smoke test | `GET /api/stats`, `GET /api/research-questions?source=reddit` |
-| Streamlit iframe | Dashboard loads at 920px height without scroll clipping |
-| Env vars set | `NEXTJS_DASHBOARD_URL` points to live Next.js URL |
 
-### 16.7 UI Surfaces Deployed
+### 16.5 Operational notes
 
-| Surface | URL / Host | User-facing features |
-|---------|------------|---------------------|
-| Streamlit | `:8501` or Streamlit Cloud | App shell, sidebar docs, iframe container |
-| Next.js (embedded) | `:3000` or Vercel | Left panel 35%, right panel 65%, Live Workflow, RAG |
-| Next.js APIs | Same host as frontend | Source-filtered Q1–Q8, RAG search, corpus stats |
-
-### 16.8 Operational Notes
-
-- **Data refresh:** Re-run `derive_sources.py` → `run_pipeline.py` → `run_analysis.py`, then redeploy or remount JSON files.  
-- **No database required:** MVP reads flat JSON at API runtime.  
-- **Scaling:** Static corpus; suitable for internal PM/stakeholder use. For live ingestion, add scheduled pipeline + object storage per Section 3 architecture.  
-- **Security:** Public deployment should not expose `.env` secrets; corpus contains only public review data with PII redaction applied in pipeline.
+- **Data refresh:** Re-run pipeline scripts, then redeploy Vercel.  
+- **No database:** MVP reads flat JSON at API runtime.  
+- **Optional env:** `GROQ_API_KEY` in `.env` for ingestion only (not required for dashboard).
 
 ---
 
