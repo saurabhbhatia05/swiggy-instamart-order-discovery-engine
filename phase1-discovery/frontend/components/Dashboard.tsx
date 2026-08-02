@@ -55,10 +55,12 @@ export default function Dashboard() {
 
   const handleSourceChange = (source: string) => {
     setSelectedSource(source);
+    setAnalysisKey(0);
   };
 
   const handleQuestionChange = (question: string) => {
     setSelectedQuestion(question);
+    setAnalysisKey(0);
   };
 
   const tabs: { id: Tab; label: string }[] = [

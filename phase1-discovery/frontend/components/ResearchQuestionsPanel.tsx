@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { formatSourceLabel } from "@/lib/sources";
 import { RESEARCH_QUESTION_OPTIONS } from "@/lib/researchQuestions";
 
@@ -206,6 +206,10 @@ export function ResearchQuestionsPanel({
   const [error, setError] = useState<string | null>(null);
   const [lastRun, setLastRun] = useState<string | null>(null);
   const [progressStep, setProgressStep] = useState(0);
+  const onStatusChangeRef = useRef(onStatusChange);
+  onStatusChangeRef.current = onStatusChange;
+  const filtersRef = useRef({ source: sourceFilter, question: selectedQuestion });
+  filtersRef.current = { source: sourceFilter, question: selectedQuestion };
 
   const sourceLabel =
     sourceFilter === "all" ? "all sources" : formatSourceLabel(sourceFilter);
@@ -215,18 +219,18 @@ export function ResearchQuestionsPanel({
       : (RESEARCH_QUESTION_OPTIONS.find((q) => q.value === selectedQuestion)?.label ??
         selectedQuestion);
 
-  const runAnalysis = useCallback(async () => {
+  const runAnalysis = useCallback(async (source: string, question: string) => {
     setLoading(true);
     setError(null);
     setItems([]);
     setProgressStep(0);
-    onStatusChange?.("running");
+    onStatusChangeRef.current?.("running");
 
     try {
       const res = await fetch("/api/analyze", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ source: sourceFilter, question: selectedQuestion }),
+        body: JSON.stringify({ source, question }),
       });
       const data = await res.json();
       if (!res.ok) {
@@ -239,19 +243,27 @@ export function ResearchQuestionsPanel({
       setTotalCorpusSize(data.totalCorpusSize ?? 0);
       setLastRun(data.generatedAt ?? new Date().toISOString());
       setProgressStep(PROGRESS_STEPS.length - 1);
-      onStatusChange?.("complete");
+      onStatusChangeRef.current?.("complete");
     } catch (e) {
       setError(e instanceof Error ? e.message : "Analysis failed");
       setItems([]);
-      onStatusChange?.("error");
+      onStatusChangeRef.current?.("error");
     } finally {
       setLoading(false);
     }
-  }, [sourceFilter, selectedQuestion, onStatusChange]);
+  }, []);
 
+  // Run only when user clicks Run AI Analysis (analysisKey increments), never on filter change.
   useEffect(() => {
-    if (analysisKey === 0) return;
-    runAnalysis();
+    if (analysisKey === 0) {
+      setItems([]);
+      setError(null);
+      setLastRun(null);
+      onStatusChangeRef.current?.("idle");
+      return;
+    }
+    const { source, question } = filtersRef.current;
+    void runAnalysis(source, question);
   }, [analysisKey, runAnalysis]);
 
   useEffect(() => {

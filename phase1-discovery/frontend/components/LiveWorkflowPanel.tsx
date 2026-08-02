@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { formatSourceLabel } from "@/lib/sources";
 import { RESEARCH_QUESTION_OPTIONS } from "@/lib/researchQuestions";
 import { ResearchQuestionsPanel } from "@/components/ResearchQuestionsPanel";
@@ -31,6 +31,12 @@ export function LiveWorkflowPanel({
   onRunAnalysis,
 }: LiveWorkflowPanelProps) {
   const [analysisStatus, setAnalysisStatus] = useState<"idle" | "running" | "complete" | "error">("idle");
+
+  useEffect(() => {
+    if (analysisKey === 0) {
+      setAnalysisStatus("idle");
+    }
+  }, [analysisKey, selectedSource, selectedQuestion]);
 
   const sourceLabel =
     selectedSource === "all" ? "all sources" : formatSourceLabel(selectedSource);
