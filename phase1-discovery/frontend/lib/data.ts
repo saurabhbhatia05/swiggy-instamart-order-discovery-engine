@@ -17,11 +17,28 @@ export interface CorpusStats {
   brandMentions: number;
   sourceDistribution: { source: string; count: number }[];
   summary: string | null;
+  dataPath?: string;
 }
 
-const PHASE1_ROOT = path.join(process.cwd(), "..");
-const PROCESSED_DIR = path.join(PHASE1_ROOT, "data", "processed");
-const HANDOFF_DIR = path.join(PHASE1_ROOT, "outputs", "handoff");
+function firstExistingDir(candidates: string[]): string | null {
+  for (const dir of candidates) {
+    if (fs.existsSync(dir)) return dir;
+  }
+  return null;
+}
+
+function resolvePaths() {
+  const cwd = process.cwd();
+  const processed = firstExistingDir([
+    path.join(cwd, "data", "processed"),
+    path.join(cwd, "..", "data", "processed"),
+  ]);
+  const handoff = firstExistingDir([
+    path.join(cwd, "data", "handoff"),
+    path.join(cwd, "..", "outputs", "handoff"),
+  ]);
+  return { processed, handoff };
+}
 
 function readJsonFile<T>(filePath: string): T | null {
   try {
@@ -32,8 +49,13 @@ function readJsonFile<T>(filePath: string): T | null {
   }
 }
 
+export function getDataPaths() {
+  return resolvePaths();
+}
+
 export function loadProcessedDocuments(): ProcessedDoc[] {
-  if (!fs.existsSync(PROCESSED_DIR)) return [];
+  const { processed: PROCESSED_DIR } = resolvePaths();
+  if (!PROCESSED_DIR) return [];
 
   const docs: ProcessedDoc[] = [];
   for (const file of fs.readdirSync(PROCESSED_DIR)) {
@@ -45,12 +67,15 @@ export function loadProcessedDocuments(): ProcessedDoc[] {
 }
 
 export function loadSummary(): string | null {
+  const { handoff: HANDOFF_DIR } = resolvePaths();
+  if (!HANDOFF_DIR) return null;
   const summaryPath = path.join(HANDOFF_DIR, "PHASE1_SUMMARY.md");
   if (!fs.existsSync(summaryPath)) return null;
   return fs.readFileSync(summaryPath, "utf-8");
 }
 
 export function buildCorpusStats(docs: ProcessedDoc[]): CorpusStats {
+  const { processed } = resolvePaths();
   const sourceMap = new Map<string, number>();
   let brandMentions = 0;
 
@@ -70,6 +95,7 @@ export function buildCorpusStats(docs: ProcessedDoc[]): CorpusStats {
     brandMentions,
     sourceDistribution,
     summary: loadSummary(),
+    dataPath: processed ?? undefined,
   };
 }
 

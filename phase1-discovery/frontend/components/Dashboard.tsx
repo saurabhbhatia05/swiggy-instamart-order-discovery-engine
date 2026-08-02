@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { LeftPanel } from "@/components/LeftPanel";
 import { LiveWorkflowPanel } from "@/components/LiveWorkflowPanel";
 import { RagChat } from "@/components/RagChat";
@@ -22,17 +22,46 @@ export default function Dashboard() {
   const [stats, setStats] = useState<Stats | null>(null);
   const [selectedSource, setSelectedSource] = useState("all");
   const [selectedQuestion, setSelectedQuestion] = useState("Q1");
+  const [analysisKey, setAnalysisKey] = useState(0);
   const [error, setError] = useState<string | null>(null);
+  const [loading, setLoading] = useState(true);
+
+  const loadStats = useCallback(async () => {
+    setLoading(true);
+    setError(null);
+    try {
+      const res = await fetch("/api/stats", { cache: "no-store" });
+      if (!res.ok) throw new Error("Failed to load corpus stats");
+      const data = await res.json();
+      if (!data.totalDocuments) {
+        throw new Error("Corpus is empty on server. Redeploy after build with data bundle.");
+      }
+      setStats(data);
+    } catch (e) {
+      setError(e instanceof Error ? e.message : "Load failed");
+      setStats(null);
+    } finally {
+      setLoading(false);
+    }
+  }, []);
 
   useEffect(() => {
-    fetch("/api/stats")
-      .then((r) => {
-        if (!r.ok) throw new Error("Failed to load stats");
-        return r.json();
-      })
-      .then(setStats)
-      .catch((e) => setError(e instanceof Error ? e.message : "Load failed"));
-  }, []);
+    loadStats();
+  }, [loadStats]);
+
+  const handleRunAnalysis = () => {
+    setAnalysisKey((k) => k + 1);
+  };
+
+  const handleSourceChange = (source: string) => {
+    setSelectedSource(source);
+    setAnalysisKey((k) => k + 1);
+  };
+
+  const handleQuestionChange = (question: string) => {
+    setSelectedQuestion(question);
+    setAnalysisKey((k) => k + 1);
+  };
 
   const tabs: { id: Tab; label: string }[] = [
     { id: "workflow", label: "Live Workflow" },
@@ -59,9 +88,9 @@ export default function Dashboard() {
             totalDocuments={stats.totalDocuments}
             sourceDistribution={stats.sourceDistribution}
             selectedSource={selectedSource}
-            onSourceChange={setSelectedSource}
+            onSourceChange={handleSourceChange}
             selectedQuestion={selectedQuestion}
-            onQuestionChange={setSelectedQuestion}
+            onQuestionChange={handleQuestionChange}
             showQuestionFilter={tab === "workflow"}
           />
         )}
@@ -83,18 +112,23 @@ export default function Dashboard() {
           <main className="min-h-0 flex-1 overflow-y-auto px-6 py-6">
             {error && (
               <div className="mb-4 rounded-lg border border-red-800 bg-red-900/20 p-4 text-red-300">
-                {error}
+                <p>{error}</p>
+                <button type="button" className="btn-primary mt-3 text-xs" onClick={loadStats}>
+                  Retry load corpus
+                </button>
               </div>
             )}
 
-            {!stats && !error && (
-              <p className="text-[var(--muted)]">Loading corpus...</p>
+            {loading && !error && (
+              <p className="text-[var(--muted)]">Loading corpus from server…</p>
             )}
 
             {stats && tab === "workflow" && (
               <LiveWorkflowPanel
                 selectedSource={selectedSource}
                 selectedQuestion={selectedQuestion}
+                analysisKey={analysisKey}
+                onRunAnalysis={handleRunAnalysis}
               />
             )}
 

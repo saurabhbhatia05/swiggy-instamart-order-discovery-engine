@@ -308,3 +308,8 @@ export function analyzeResearchQuestions(
 }
 
 export const RESEARCH_QUESTION_IDS = QUESTIONS.map((q) => q.id);
+
+export const RESEARCH_QUESTION_OPTIONS = QUESTIONS.map((q) => ({
+  value: q.id,
+  label: `${q.id} — ${q.question}`,
+}));

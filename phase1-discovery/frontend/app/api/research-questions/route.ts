@@ -2,6 +2,8 @@ import { NextRequest, NextResponse } from "next/server";
 import { loadProcessedDocuments } from "@/lib/data";
 import { analyzeResearchQuestions } from "@/lib/researchQuestions";
 
+export const dynamic = "force-dynamic";
+
 export async function GET(request: NextRequest) {
   const source = request.nextUrl.searchParams.get("source") ?? "all";
   const docs = loadProcessedDocuments();

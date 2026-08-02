@@ -1,24 +1,28 @@
 "use client";
 
 import { formatSourceLabel } from "@/lib/sources";
-import { RESEARCH_QUESTION_OPTIONS } from "@/components/FilterSelect";
+import { RESEARCH_QUESTION_OPTIONS } from "@/lib/researchQuestions";
 import { ResearchQuestionsPanel } from "@/components/ResearchQuestionsPanel";
 
 interface LiveWorkflowPanelProps {
   selectedSource: string;
   selectedQuestion: string;
+  analysisKey: number;
+  onRunAnalysis: () => void;
 }
 
 const WORKFLOW_STEPS = [
   { id: "ingest", label: "Ingest", status: "complete" },
   { id: "process", label: "Process & Dedupe", status: "complete" },
-  { id: "analyze", label: "AI Analysis", status: "complete" },
-  { id: "discover", label: "Discovery Q1–Q8", status: "active" },
+  { id: "analyze", label: "AI Analysis", status: "active" },
+  { id: "discover", label: "Discovery Q1–Q8", status: "pending" },
 ];
 
 export function LiveWorkflowPanel({
   selectedSource,
   selectedQuestion,
+  analysisKey,
+  onRunAnalysis,
 }: LiveWorkflowPanelProps) {
   const sourceLabel =
     selectedSource === "all" ? "all sources" : formatSourceLabel(selectedSource);
@@ -54,14 +58,28 @@ export function LiveWorkflowPanel({
         </div>
       </div>
 
-      <div className="mb-5 rounded-lg border border-[var(--border)] bg-[var(--surface)] px-4 py-3 text-sm text-[var(--muted)]">
-        Showing <strong className="text-[var(--accent-soft)]">{questionLabel}</strong> from{" "}
-        <strong className="text-[var(--accent-soft)]">{sourceLabel}</strong>
+      <div className="card mb-5 flex flex-wrap items-center justify-between gap-4">
+        <div className="text-sm text-[var(--muted)]">
+          <p>
+            Selected: <strong className="text-[var(--accent-soft)]">{questionLabel}</strong>
+          </p>
+          <p className="mt-1">
+            Data source: <strong className="text-[var(--accent-soft)]">{sourceLabel}</strong>
+          </p>
+        </div>
+        <button
+          type="button"
+          className="btn-primary"
+          onClick={onRunAnalysis}
+        >
+          Run AI Analysis
+        </button>
       </div>
 
       <ResearchQuestionsPanel
         sourceFilter={selectedSource}
         selectedQuestion={selectedQuestion}
+        analysisKey={analysisKey}
       />
     </div>
   );

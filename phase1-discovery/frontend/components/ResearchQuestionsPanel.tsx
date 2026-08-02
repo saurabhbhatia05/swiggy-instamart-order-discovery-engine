@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { formatSourceLabel } from "@/lib/sources";
 
 interface EvidenceQuote {
@@ -29,38 +29,70 @@ const CONFIDENCE_CLASS: Record<string, string> = {
 interface ResearchQuestionsPanelProps {
   sourceFilter?: string;
   selectedQuestion?: string;
+  analysisKey?: number;
 }
 
 export function ResearchQuestionsPanel({
   sourceFilter = "all",
   selectedQuestion = "Q1",
+  analysisKey = 0,
 }: ResearchQuestionsPanelProps) {
-  const [answers, setAnswers] = useState<ResearchAnswer[]>([]);
+  const [item, setItem] = useState<ResearchAnswer | null>(null);
   const [corpusSize, setCorpusSize] = useState(0);
-  const [loading, setLoading] = useState(true);
-
-  useEffect(() => {
-    setLoading(true);
-    const params = sourceFilter !== "all" ? `?source=${encodeURIComponent(sourceFilter)}` : "";
-    fetch(`/api/research-questions${params}`)
-      .then((r) => r.json())
-      .then((data) => {
-        setAnswers(data.questions ?? []);
-        setCorpusSize(data.corpusSize ?? 0);
-      })
-      .finally(() => setLoading(false));
-  }, [sourceFilter]);
+  const [totalCorpusSize, setTotalCorpusSize] = useState(0);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [lastRun, setLastRun] = useState<string | null>(null);
 
   const sourceLabel =
     sourceFilter === "all" ? "all sources" : formatSourceLabel(sourceFilter);
 
-  const item = answers.find((a) => a.id === selectedQuestion);
+  const runAnalysis = useCallback(async () => {
+    setLoading(true);
+    setError(null);
+    try {
+      const res = await fetch("/api/analyze", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ source: sourceFilter, question: selectedQuestion }),
+      });
+      const data = await res.json();
+      if (!res.ok) {
+        throw new Error(data.error ?? "Analysis failed");
+      }
+      setItem(data.result ?? null);
+      setCorpusSize(data.corpusSize ?? 0);
+      setTotalCorpusSize(data.totalCorpusSize ?? 0);
+      setLastRun(data.generatedAt ?? new Date().toISOString());
+    } catch (e) {
+      setError(e instanceof Error ? e.message : "Analysis failed");
+      setItem(null);
+    } finally {
+      setLoading(false);
+    }
+  }, [sourceFilter, selectedQuestion]);
 
-  if (loading) {
+  useEffect(() => {
+    runAnalysis();
+  }, [runAnalysis, analysisKey]);
+
+  if (loading && !item) {
     return (
-      <p className="text-[var(--muted)]">
-        Analyzing {sourceLabel}...
-      </p>
+      <div className="card border-l-4 border-l-[var(--accent)]">
+        <p className="text-sm text-[var(--muted)]">
+          Running AI analysis on <strong className="text-[var(--accent-soft)]">{sourceLabel}</strong>…
+        </p>
+        <p className="mt-2 text-xs text-[var(--muted)]">Scanning corpus, matching themes, fetching evidence quotes</p>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="rounded-lg border border-red-800 bg-red-900/20 p-4 text-red-300">
+        <p className="font-medium">AI analysis could not run</p>
+        <p className="mt-1 text-sm">{error}</p>
+      </div>
     );
   }
 
@@ -76,10 +108,20 @@ export function ResearchQuestionsPanel({
     <div className="space-y-4">
       <div className="card border-l-4 border-l-[var(--accent)]">
         <p className="text-sm text-[var(--muted)]">
-          Answer synthesized from{" "}
+          AI analysis complete —{" "}
+          <strong className="text-[var(--accent-soft)]">{item.evidenceCount.toLocaleString()}</strong>{" "}
+          matching records from{" "}
           <strong className="text-[var(--accent-soft)]">{corpusSize.toLocaleString()}</strong>{" "}
-          reviews in <strong className="text-[var(--accent-soft)]">{sourceLabel}</strong>.
+          reviews in <strong className="text-[var(--accent-soft)]">{sourceLabel}</strong>
+          {totalCorpusSize > 0 && corpusSize !== totalCorpusSize && (
+            <> (filtered from {totalCorpusSize.toLocaleString()} total)</>
+          )}
         </p>
+        {lastRun && (
+          <p className="mt-1 text-xs text-[var(--muted)]">
+            Last run: {new Date(lastRun).toLocaleString()}
+          </p>
+        )}
       </div>
 
       <div className="card">
@@ -150,7 +192,7 @@ export function ResearchQuestionsPanel({
           {item.sampleQuotes.length > 0 && (
             <div>
               <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-[var(--muted)]">
-                Sample evidence quotes
+                Sample evidence quotes ({item.sampleQuotes.length} shown)
               </p>
               <div className="space-y-2">
                 {item.sampleQuotes.map((q, i) => (

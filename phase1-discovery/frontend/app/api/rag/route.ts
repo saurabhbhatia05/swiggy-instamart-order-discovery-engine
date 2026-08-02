@@ -1,6 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
 import { loadProcessedDocuments, mockRagAnswer, searchCorpus } from "@/lib/data";
 
+export const dynamic = "force-dynamic";
+
 export async function POST(request: NextRequest) {
   const body = await request.json();
   const query = (body.query as string)?.trim();

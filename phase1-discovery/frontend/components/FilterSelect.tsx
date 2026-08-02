@@ -1,6 +1,7 @@
 "use client";
 
 import { formatSourceLabel } from "@/lib/sources";
+import { RESEARCH_QUESTION_OPTIONS } from "@/lib/researchQuestions";
 
 interface FilterSelectProps {
   label: string;
@@ -79,17 +80,6 @@ export function SourceSelect({
     />
   );
 }
-
-export const RESEARCH_QUESTION_OPTIONS = [
-  { value: "Q1", label: "Q1 — Why do users repeatedly buy from the same categories?" },
-  { value: "Q2", label: "Q2 — What prevents users from exploring new categories?" },
-  { value: "Q3", label: "Q3 — How do users discover products today?" },
-  { value: "Q4", label: "Q4 — What role do habits play in shopping behavior?" },
-  { value: "Q5", label: "Q5 — What information do users need before trying a new category?" },
-  { value: "Q6", label: "Q6 — What frustrations emerge repeatedly?" },
-  { value: "Q7", label: "Q7 — Which user segments are more likely to experiment?" },
-  { value: "Q8", label: "Q8 — What unmet needs emerge consistently across discussions?" },
-];
 
 interface QuestionSelectProps {
   selectedQuestion: string;
