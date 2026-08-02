@@ -38,6 +38,10 @@ body {
   @apply shrink-0 rounded-lg bg-[var(--accent)] px-4 py-2 text-sm font-medium text-white hover:opacity-90 transition-opacity;
 }
 
+.btn-primary:disabled {
+  @apply cursor-not-allowed opacity-50;
+}
+
 .badge {
   @apply inline-block rounded-full px-2.5 py-0.5 text-xs font-medium;
 }

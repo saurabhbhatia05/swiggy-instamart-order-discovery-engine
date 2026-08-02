@@ -1,5 +1,6 @@
 "use client";
 
+import { useState } from "react";
 import { formatSourceLabel } from "@/lib/sources";
 import { RESEARCH_QUESTION_OPTIONS } from "@/lib/researchQuestions";
 import { ResearchQuestionsPanel } from "@/components/ResearchQuestionsPanel";
@@ -12,11 +13,16 @@ interface LiveWorkflowPanelProps {
 }
 
 const WORKFLOW_STEPS = [
-  { id: "ingest", label: "Ingest", status: "complete" },
-  { id: "process", label: "Process & Dedupe", status: "complete" },
-  { id: "analyze", label: "AI Analysis", status: "active" },
-  { id: "discover", label: "Discovery Q1–Q8", status: "pending" },
+  { id: "ingest", label: "Ingest" },
+  { id: "process", label: "Process & Dedupe" },
+  { id: "analyze", label: "AI Analysis" },
+  { id: "discover", label: "Discovery Q1–Q8" },
 ];
+
+function questionLabelFor(id: string): string {
+  if (id === "all") return "All questions (Q1–Q8)";
+  return RESEARCH_QUESTION_OPTIONS.find((q) => q.value === id)?.label ?? id;
+}
 
 export function LiveWorkflowPanel({
   selectedSource,
@@ -24,11 +30,32 @@ export function LiveWorkflowPanel({
   analysisKey,
   onRunAnalysis,
 }: LiveWorkflowPanelProps) {
+  const [analysisStatus, setAnalysisStatus] = useState<"idle" | "running" | "complete" | "error">("idle");
+
   const sourceLabel =
     selectedSource === "all" ? "all sources" : formatSourceLabel(selectedSource);
-  const questionLabel =
-    RESEARCH_QUESTION_OPTIONS.find((q) => q.value === selectedQuestion)?.label ??
-    selectedQuestion;
+  const questionLabel = questionLabelFor(selectedQuestion);
+
+  const stepStatus = (stepId: string): "complete" | "active" | "pending" => {
+    if (analysisStatus === "idle") {
+      if (stepId === "ingest" || stepId === "process") return "complete";
+      return "pending";
+    }
+    if (analysisStatus === "running") {
+      if (stepId === "ingest" || stepId === "process") return "complete";
+      if (stepId === "analyze") return "active";
+      return "pending";
+    }
+    if (analysisStatus === "complete" || analysisStatus === "error") {
+      return "complete";
+    }
+    return "pending";
+  };
+
+  const handleRun = () => {
+    setAnalysisStatus("running");
+    onRunAnalysis();
+  };
 
   return (
     <div>
@@ -37,24 +64,27 @@ export function LiveWorkflowPanel({
           Live workflow status
         </p>
         <div className="flex flex-wrap items-center gap-2">
-          {WORKFLOW_STEPS.map((step, i) => (
-            <div key={step.id} className="flex items-center gap-2">
-              <span
-                className={`workflow-step ${
-                  step.status === "active"
-                    ? "workflow-step-active"
-                    : step.status === "complete"
-                      ? "workflow-step-complete"
-                      : ""
-                }`}
-              >
-                {step.label}
-              </span>
-              {i < WORKFLOW_STEPS.length - 1 && (
-                <span className="text-[var(--muted)]">→</span>
-              )}
-            </div>
-          ))}
+          {WORKFLOW_STEPS.map((step, i) => {
+            const status = stepStatus(step.id);
+            return (
+              <div key={step.id} className="flex items-center gap-2">
+                <span
+                  className={`workflow-step ${
+                    status === "active"
+                      ? "workflow-step-active"
+                      : status === "complete"
+                        ? "workflow-step-complete"
+                        : ""
+                  }`}
+                >
+                  {step.label}
+                </span>
+                {i < WORKFLOW_STEPS.length - 1 && (
+                  <span className="text-[var(--muted)]">→</span>
+                )}
+              </div>
+            );
+          })}
         </div>
       </div>
 
@@ -66,13 +96,19 @@ export function LiveWorkflowPanel({
           <p className="mt-1">
             Data source: <strong className="text-[var(--accent-soft)]">{sourceLabel}</strong>
           </p>
+          {analysisKey === 0 && (
+            <p className="mt-2 text-xs italic">
+              Choose filters above, then click Run AI Analysis to fetch matching records.
+            </p>
+          )}
         </div>
         <button
           type="button"
-          className="btn-primary"
-          onClick={onRunAnalysis}
+          className="btn-primary disabled:cursor-not-allowed disabled:opacity-50"
+          onClick={handleRun}
+          disabled={analysisStatus === "running"}
         >
-          Run AI Analysis
+          {analysisStatus === "running" ? "Running analysis…" : "Run AI Analysis"}
         </button>
       </div>
 
@@ -80,6 +116,7 @@ export function LiveWorkflowPanel({
         sourceFilter={selectedSource}
         selectedQuestion={selectedQuestion}
         analysisKey={analysisKey}
+        onStatusChange={setAnalysisStatus}
       />
     </div>
   );

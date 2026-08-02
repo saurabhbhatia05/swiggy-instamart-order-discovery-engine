@@ -28,6 +28,20 @@ export async function POST(request: NextRequest) {
       : docs;
 
   const allAnswers = analyzeResearchQuestions(docs, source);
+
+  if (questionId === "all") {
+    return NextResponse.json({
+      sourceFilter: source,
+      sourceLabel: source === "all" ? "all sources" : formatSourceLabel(source),
+      questionId: "all",
+      questionLabel: "All questions (Q1–Q8)",
+      corpusSize: filtered.length,
+      totalCorpusSize: docs.length,
+      generatedAt: new Date().toISOString(),
+      results: allAnswers,
+    });
+  }
+
   const answer = allAnswers.find((a) => a.id === questionId);
 
   if (!answer) {

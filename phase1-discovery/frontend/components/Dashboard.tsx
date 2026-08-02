@@ -21,7 +21,7 @@ export default function Dashboard() {
   const [tab, setTab] = useState<Tab>("workflow");
   const [stats, setStats] = useState<Stats | null>(null);
   const [selectedSource, setSelectedSource] = useState("all");
-  const [selectedQuestion, setSelectedQuestion] = useState("Q1");
+  const [selectedQuestion, setSelectedQuestion] = useState("all");
   const [analysisKey, setAnalysisKey] = useState(0);
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
@@ -55,12 +55,10 @@ export default function Dashboard() {
 
   const handleSourceChange = (source: string) => {
     setSelectedSource(source);
-    setAnalysisKey((k) => k + 1);
   };
 
   const handleQuestionChange = (question: string) => {
     setSelectedQuestion(question);
-    setAnalysisKey((k) => k + 1);
   };
 
   const tabs: { id: Tab; label: string }[] = [

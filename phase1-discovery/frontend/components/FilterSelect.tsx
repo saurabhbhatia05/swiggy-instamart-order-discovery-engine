@@ -92,12 +92,17 @@ export function QuestionSelect({
   onQuestionChange,
   fullWidth,
 }: QuestionSelectProps) {
+  const options = [
+    { value: "all", label: "All questions (Q1–Q8)" },
+    ...RESEARCH_QUESTION_OPTIONS,
+  ];
+
   return (
     <FilterSelect
       label="Research question"
       value={selectedQuestion}
       onChange={onQuestionChange}
-      options={RESEARCH_QUESTION_OPTIONS}
+      options={options}
       id="research-question-filter"
       fullWidth={fullWidth}
     />
